@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vintage Radio & Jukebox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Slab:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto Slab', serif;
+            background: linear-gradient(to bottom, #2c1810 0%, #1a0f08 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* Vintage film grain texture */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* Wood grain texture */
+        .wood-grain {
+            background: 
+                linear-gradient(90deg, 
+                    rgba(101, 67, 33, 0.1) 0%, 
+                    rgba(139, 90, 43, 0.15) 25%, 
+                    rgba(101, 67, 33, 0.1) 50%, 
+                    rgba(139, 90, 43, 0.15) 75%, 
+                    rgba(101, 67, 33, 0.1) 100%
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.05) 2px,
+                    rgba(0, 0, 0, 0.05) 4px
+                );
+            background-size: 100% 100%, 100% 8px;
+        }
+        
+        /* Chrome/brass effect */
+        .chrome-finish {
+            background: linear-gradient(135deg, 
+                #d4d4d4 0%, 
+                #b8b8b8 25%, 
+                #e8e8e8 50%, 
+                #b8b8b8 75%, 
+                #d4d4d4 100%
+            );
+            box-shadow: 
+                inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .brass-finish {
+            background: linear-gradient(135deg, 
+                #b8860b 0%, 
+                #9a7209 25%, 
+                #daa520 50%, 
+                #9a7209 75%, 
+                #b8860b 100%
+            );
+            box-shadow: 
+                inset 0 2px 4px rgba(255, 255, 255, 0.2),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+                0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Knob container with scale */
+        .knob-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .knob-scale {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            pointer-events: none;
+        }
+        
+        .knob-tick {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform-origin: 50% 60px;
+            width: 2px;
+            height: 8px;
+            background: #8b4513;
+        }
+        
+        .knob-tick.major {
+            height: 12px;
+            background: #b8860b;
+            width: 3px;
+        }
+        
+        .knob-label-number {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: #d4a574;
+            font-weight: bold;
+        }
+        
+        .knob-value-display {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: #ff8c42;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        /* Knob styling */
+        .vintage-knob {
+            background: radial-gradient(circle at 30% 30%, 
+                #e0e0e0 0%, 
+                #c0c0c0 40%, 
+                #808080 100%
+            );
+            border: 3px solid #606060;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.6),
+                inset -3px -3px 6px rgba(0, 0, 0, 0.8),
+                inset 3px 3px 6px rgba(255, 255, 255, 0.3),
+                0 4px 12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .vintage-knob::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 20px;
+            background: #8b4513;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            z-index: 11;
+        }
+        
+        .vintage-knob::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #a0a0a0 0%, #606060 100%);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Radio dial display */
+        .radio-dial {
+            background: 
+                linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 50%, #1a1a1a 100%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 1px,
+                    rgba(139, 69, 19, 0.1) 1px,
+                    rgba(139, 69, 19, 0.1) 2px
+                );
+            box-shadow: 
+                inset 0 0 40px rgba(0, 0, 0, 0.9),
+                inset 0 2px 8px rgba(139, 69, 19, 0.3),
+                0 0 0 2px #654321,
+                0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Frequency scale */
+        .frequency-scale {
+            position: relative;
+            height: 60px;
+            background: linear-gradient(90deg, 
+                rgba(139, 69, 19, 0.1) 0%, 
+                rgba(139, 69, 19, 0.3) 50%, 
+                rgba(139, 69, 19, 0.1) 100%
+            );
+            border-top: 2px solid #654321;
+            border-bottom: 2px solid #654321;
+        }
+        
+        .frequency-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #8b4513;
+        }
+        
+        .frequency-marker.major {
+            height: 100%;
+            background: #b8860b;
+        }
+        
+        .frequency-marker.minor {
+            height: 60%;
+            top: 20%;
+        }
+        
+        .frequency-label {
+            position: absolute;
+            top: -20px;
+            font-size: 0.7rem;
+            color: #d4a574;
+            transform: translateX(-50%);
+        }
+        
+        /* Vintage button */
+        .vintage-button {
+            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+            border: 2px solid #4a2c1a;
+            box-shadow: 
+                inset 0 2px 4px rgba(255, 255, 255, 0.1),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+                0 2px 6px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .vintage-button:hover {
+            background: linear-gradient(180deg, #a0522d 0%, #8b4513 100%);
+            box-shadow: 
+                inset 0 2px 4px rgba(255, 255, 255, 0.15),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+                0 3px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        .vintage-button:active {
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.5),
+                inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+        }
+        
+        .vintage-button.active {
+            background: linear-gradient(180deg, #b8860b 0%, #9a7209 100%);
+            border-color: #daa520;
+        }
+        
+        /* Record display */
+        .record {
+            background: 
+                radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 30%, #0a0a0a 100%),
+                repeating-conic-gradient(
+                    from 0deg at 50% 50%,
+                    #000 0deg,
+                    #1a1a1a 0.5deg,
+                    #000 1deg
+                );
+            box-shadow: 
+                inset 0 0 30px rgba(0, 0, 0, 0.9),
+                0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+        
+        .record.playing {
+            animation: spin-record 3s linear infinite;
+        }
+        
+        @keyframes spin-record {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Glass effect for display */
+        .glass-display {
+            background: 
+                linear-gradient(180deg, 
+                    rgba(0, 0, 0, 0.8) 0%, 
+                    rgba(20, 10, 5, 0.9) 50%, 
+                    rgba(0, 0, 0, 0.8) 100%
+                );
+            box-shadow: 
+                inset 0 0 30px rgba(0, 0, 0, 0.9),
+                inset 0 2px 8px rgba(139, 69, 19, 0.2),
+                0 0 0 3px #654321,
+                0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Vintage scrollbar */
+        .vintage-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .vintage-scroll::-webkit-scrollbar-track {
+            background: #2c1810;
+            border: 1px solid #654321;
+        }
+        
+        .vintage-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+            border: 1px solid #4a2c1a;
+            border-radius: 4px;
+        }
+        
+        .vintage-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #a0522d 0%, #8b4513 100%);
+        }
+        
+        /* Nixie tube style numbers */
+        .nixie-style {
+            font-family: 'Space Mono', monospace;
+            color: #ff8c42;
+            text-shadow: 
+                0 0 3px rgba(255, 140, 66, 0.5),
+                0 0 6px rgba(255, 140, 66, 0.3);
+        }
+        
+        /* Upload area vintage style */
+        .upload-area-vintage {
+            background: 
+                linear-gradient(145deg, #3d2817 0%, #2c1810 100%),
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.1) 2px,
+                    rgba(0, 0, 0, 0.1) 4px
+                );
+            border: 2px dashed #654321;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area-vintage:hover {
+            border-color: #8b4513;
+            background: 
+                linear-gradient(145deg, #4a2c1a 0%, #3d2817 100%),
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(139, 69, 19, 0.1) 2px,
+                    rgba(139, 69, 19, 0.1) 4px
+                );
+        }
+        
+        .upload-area-vintage.dragover {
+            border-color: #b8860b;
+            background: 
+                linear-gradient(145deg, #5c3a1f 0%, #4a2c1a 100%),
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(184, 134, 11, 0.2) 2px,
+                    rgba(184, 134, 11, 0.2) 4px
+                );
+        }
+    </style>
+</head>
+<body class="text-amber-100">
+    <div class="max-w-6xl mx-auto">
+        <!-- Main Radio/Jukebox Cabinet -->
+        <div class="wood-grain rounded-2xl border-4 border-amber-900 p-8 shadow-2xl" style="box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.3);">
+            
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-2" style="font-family: 'Playfair Display', serif; color: #d4a574; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);">
+                    MIDNIGHT RADIO
+                </h1>
+                <p class="text-amber-700 text-sm uppercase tracking-widest">Vintage Radio & Jukebox</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Left Side: Radio Tuner -->
+                <div class="space-y-6">
+                    
+                    <!-- Frequency Display -->
+                    <div class="radio-dial rounded-lg p-6">
+                        <div class="text-center mb-4">
+                            <div id="frequencyValue" class="nixie-style text-5xl font-bold mb-2" style="font-family: 'Space Mono', monospace;">88.5</div>
+                            <div id="stationName" class="text-amber-600 text-lg uppercase tracking-wider">STATIC</div>
+                        </div>
+                        
+                        <!-- Frequency Scale -->
+                        <div class="frequency-scale rounded mt-4 relative" id="frequencyScale">
+                            <!-- Markers will be generated by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Tuning Controls -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="text-center">
+                            <div class="text-amber-700 text-xs uppercase tracking-wider mb-3 font-semibold">TUNE</div>
+                            <div class="knob-wrapper mx-auto">
+                                <div class="knob-scale" id="tuneKnobScale"></div>
+                                <div class="vintage-knob w-20 h-20 rounded-full relative cursor-grab active:cursor-grabbing" id="tuneKnob"></div>
+                                <div class="knob-value-display" id="tuneKnobValue">5.0</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-amber-700 text-xs uppercase tracking-wider mb-3 font-semibold">VOLUME</div>
+                            <div class="knob-wrapper mx-auto">
+                                <div class="knob-scale" id="volumeKnobScale"></div>
+                                <div class="vintage-knob w-20 h-20 rounded-full relative cursor-grab active:cursor-grabbing" id="volumeKnob"></div>
+                                <div class="knob-value-display" id="volumeKnobValue">5.0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Radio Controls -->
+                    <div class="flex gap-3 justify-center">
+                        <button class="vintage-button px-6 py-3 rounded text-amber-100 font-semibold uppercase text-sm" id="playBtn">▶ Play</button>
+                        <button class="vintage-button px-6 py-3 rounded text-amber-100 font-semibold uppercase text-sm" id="stopBtn">⏹ Stop</button>
+                    </div>
+                    
+                    <!-- Content Display (for radio stations) -->
+                    <div class="glass-display rounded-lg p-4 min-h-[150px] max-h-[200px] overflow-y-auto vintage-scroll" id="contentDisplay">
+                        <div class="text-amber-600 text-center italic">Tuning into the void...</div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Right Side: Jukebox -->
+                <div class="space-y-6">
+                    
+                    <!-- Record Display -->
+                    <div class="glass-display rounded-lg p-6 text-center">
+                        <div class="record w-40 h-40 rounded-full mx-auto mb-4 relative" id="recordDisplay">
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full chrome-finish"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full brass-finish flex items-center justify-center text-xs font-bold text-amber-900" style="font-size: 0.5rem;">
+                                45<br>RPM
+                            </div>
+                        </div>
+                        <div class="track-info">
+                            <div id="trackNumber" class="nixie-style text-3xl font-bold mb-2" style="font-family: 'Space Mono', monospace;">--</div>
+                            <div id="trackName" class="text-amber-600 text-sm uppercase tracking-wider">NO TRACK SELECTED</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Jukebox Controls -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-amber-700 text-xs uppercase tracking-wider mb-3 font-semibold">BASS</div>
+                            <div class="knob-wrapper mx-auto">
+                                <div class="knob-scale" id="bassKnobScale"></div>
+                                <div class="vintage-knob w-16 h-16 rounded-full relative cursor-grab active:cursor-grabbing" id="bassKnob"></div>
+                                <div class="knob-value-display" id="bassKnobValue">5.0</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-amber-700 text-xs uppercase tracking-wider mb-3 font-semibold">TREBLE</div>
+                            <div class="knob-wrapper mx-auto">
+                                <div class="knob-scale" id="trebleKnobScale"></div>
+                                <div class="vintage-knob w-16 h-16 rounded-full relative cursor-grab active:cursor-grabbing" id="trebleKnob"></div>
+                                <div class="knob-value-display" id="trebleKnobValue">5.0</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-amber-700 text-xs uppercase tracking-wider mb-3 font-semibold">BALANCE</div>
+                            <div class="knob-wrapper mx-auto">
+                                <div class="knob-scale" id="balanceKnobScale"></div>
+                                <div class="vintage-knob w-16 h-16 rounded-full relative cursor-grab active:cursor-grabbing" id="balanceKnob"></div>
+                                <div class="knob-value-display" id="balanceKnobValue">5.0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Jukebox Buttons -->
+                    <div class="flex gap-2 justify-center flex-wrap">
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold uppercase text-xs" id="jukeboxPlayBtn">▶</button>
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold uppercase text-xs" id="jukeboxPauseBtn">⏸</button>
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold uppercase text-xs" id="jukeboxStopBtn">⏹</button>
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold uppercase text-xs" id="prevBtn">⏮</button>
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold uppercase text-xs" id="nextBtn">⏭</button>
+                    </div>
+                    
+                    <!-- Track List -->
+                    <div class="glass-display rounded-lg p-4 max-h-[250px] overflow-y-auto vintage-scroll" id="trackSelector">
+                        <div class="text-amber-600 text-center italic text-sm">No tracks loaded. Upload music files to get started.</div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="mt-8 pt-8 border-t-2 border-amber-900">
+                <div class="text-center mb-4">
+                    <h3 class="text-amber-700 text-lg uppercase tracking-wider font-semibold">Upload Music Files</h3>
+                </div>
+                <div class="upload-area-vintage rounded-lg p-6 text-center cursor-pointer" id="uploadArea">
+                    <input type="file" id="fileInput" accept="audio/*" multiple class="hidden">
+                    <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+                    <div class="text-4xl mb-3">📻</div>
+                    <div class="text-amber-200 font-semibold mb-2">Click to select files or folder</div>
+                    <div class="text-amber-600 text-sm italic mb-4">Supports: MP3, WAV, OGG, M4A, FLAC, AAC</div>
+                    <div class="flex gap-3 justify-center">
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold text-sm" onclick="document.getElementById('fileInput').click()">Select Files</button>
+                        <button class="vintage-button px-4 py-2 rounded text-amber-100 font-semibold text-sm" onclick="document.getElementById('folderInput').click()">Select Folder</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <audio id="audioPlayer" preload="auto"></audio>
+    
+    <script>
+        // Stations configuration (like the original)
+        const stations = {
+            88.5: {
+                name: 'STATIC',
+                type: 'static',
+                content: null
+            },
+            92.3: {
+                name: 'UNDERGROUND',
+                type: 'music',
+                content: {
+                    title: 'Underground Transmission',
+                    text: 'You\'ve found the underground frequency. Here, artists share their raw, unfiltered sounds. Tonight\'s selection: ambient electronic waves mixed with analog warmth.'
+                }
+            },
+            95.7: {
+                name: 'CONFESSIONS',
+                type: 'confession',
+                content: {
+                    title: 'Anonymous Confession #0427',
+                    text: 'I write this at 3:47 AM. The city sleeps, but I don\'t. There\'s something about the silence of night that makes truths easier to speak.'
+                }
+            },
+            98.1: {
+                name: 'STORIES',
+                type: 'story',
+                content: {
+                    title: 'The Last Train',
+                    text: 'The 2:15 AM train doesn\'t exist on any schedule. But if you\'re at the station at exactly that time, you\'ll see it. The conductor never looks at you, but he knows you\'re there.'
+                }
+            },
+            101.5: {
+                name: 'DIARY',
+                type: 'diary',
+                content: {
+                    title: 'Lost Pages - Entry Unknown',
+                    text: 'Found this notebook in an abandoned building. The pages are water-damaged, but some words remain legible.'
+                }
+            },
+            104.9: {
+                name: 'GLITCH',
+                type: 'glitch',
+                content: {
+                    title: 'SYSTEM ERROR',
+                    text: 'REALITY.EXE HAS STOPPED WORKING\n\nTHE MATRIX IS BREAKING DOWN'
+                }
+            }
+        };
+        
+        // State
+        let currentFrequency = 88.5;
+        let volume = 0.5;
+        let bass = 0.5;
+        let treble = 0.5;
+        let balance = 0.5;
+        let isPlaying = false;
+        
+        // Knob state - track current rotation for each knob
+        const knobState = {
+            tune: { currentRotation: 0, value: 5.0 },
+            volume: { currentRotation: 135, value: 5.0 },
+            bass: { currentRotation: 90, value: 5.0 },
+            treble: { currentRotation: 90, value: 5.0 },
+            balance: { currentRotation: 90, value: 5.0 }
+        };
+        
+        let tracks = [];
+        let currentTrackIndex = -1;
+        
+        // Audio context for EQ
+        let audioContext;
+        let sourceNode;
+        let gainNode;
+        let bassFilter;
+        let trebleFilter;
+        let splitterNode;
+        let leftGain;
+        let rightGain;
+        let mergerNode;
+        
+        // Elements
+        const frequencyValue = document.getElementById('frequencyValue');
+        const stationName = document.getElementById('stationName');
+        const contentDisplay = document.getElementById('contentDisplay');
+        const tuneKnob = document.getElementById('tuneKnob');
+        const volumeKnob = document.getElementById('volumeKnob');
+        const bassKnob = document.getElementById('bassKnob');
+        const trebleKnob = document.getElementById('trebleKnob');
+        const balanceKnob = document.getElementById('balanceKnob');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const jukeboxPlayBtn = document.getElementById('jukeboxPlayBtn');
+        const jukeboxPauseBtn = document.getElementById('jukeboxPauseBtn');
+        const jukeboxStopBtn = document.getElementById('jukeboxStopBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const recordDisplay = document.getElementById('recordDisplay');
+        const trackNumber = document.getElementById('trackNumber');
+        const trackName = document.getElementById('trackName');
+        const trackSelector = document.getElementById('trackSelector');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const folderInput = document.getElementById('folderInput');
+        const frequencyScale = document.getElementById('frequencyScale');
+        
+        // Create frequency scale markers
+        function createFrequencyScale() {
+            frequencyScale.innerHTML = '';
+            const minFreq = 88.0;
+            const maxFreq = 108.0;
+            const range = maxFreq - minFreq;
+            const width = frequencyScale.offsetWidth;
+            
+            // Major markers every 2 MHz
+            for (let freq = 88; freq <= 108; freq += 2) {
+                const position = ((freq - minFreq) / range) * 100;
+                const marker = document.createElement('div');
+                marker.className = 'frequency-marker major';
+                marker.style.left = `${position}%`;
+                frequencyScale.appendChild(marker);
+                
+                const label = document.createElement('div');
+                label.className = 'frequency-label';
+                label.textContent = freq.toFixed(0);
+                label.style.left = `${position}%`;
+                frequencyScale.appendChild(label);
+            }
+            
+            // Minor markers every 0.5 MHz
+            for (let freq = 88.5; freq < 108; freq += 0.5) {
+                if (freq % 2 !== 0) {
+                    const position = ((freq - minFreq) / range) * 100;
+                    const marker = document.createElement('div');
+                    marker.className = 'frequency-marker minor';
+                    marker.style.left = `${position}%`;
+                    frequencyScale.appendChild(marker);
+                }
+            }
+        }
+        
+        // Initialize frequency scale
+        setTimeout(createFrequencyScale, 100);
+        window.addEventListener('resize', createFrequencyScale);
+        
+        // Find nearest station
+        function findNearestStation(freq) {
+            const stationFreqs = Object.keys(stations).map(Number);
+            return stationFreqs.reduce((prev, curr) => {
+                return Math.abs(curr - freq) < Math.abs(prev - freq) ? curr : prev;
+            });
+        }
+        
+        // Update frequency
+        function updateFrequency(freq) {
+            currentFrequency = Math.max(88.0, Math.min(108.0, freq));
+            frequencyValue.textContent = currentFrequency.toFixed(1);
+            
+            const nearestStation = findNearestStation(currentFrequency);
+            const station = stations[nearestStation];
+            
+            // Show static if not close enough to a station
+            const distance = Math.abs(currentFrequency - nearestStation);
+            if (distance > 0.3) {
+                stationName.textContent = 'STATIC';
+                contentDisplay.innerHTML = '<div class="text-amber-600 text-center italic">Searching for signal...</div>';
+            } else {
+                stationName.textContent = station.name;
+                loadStationContent(station);
+            }
+        }
+        
+        // Load station content
+        function loadStationContent(station) {
+            if (station.content) {
+                const contentHTML = `
+                    <div class="space-y-2">
+                        <div class="text-amber-400 font-semibold uppercase text-sm">${station.content.title}</div>
+                        <div class="text-amber-200 text-sm leading-relaxed">${station.content.text.split('\n').map(p => `<p class="mb-2">${p}</p>`).join('')}</div>
+                    </div>
+                `;
+                contentDisplay.innerHTML = contentHTML;
+            } else {
+                contentDisplay.innerHTML = '<div class="text-amber-600 text-center italic">No signal detected</div>';
+            }
+        }
+        
+        // Create knob scale with tick marks
+        function createKnobScale(scaleElement, knobSize) {
+            scaleElement.innerHTML = '';
+            const radius = knobSize / 2 + 12;
+            const centerX = 60;
+            const centerY = 60;
+            
+            // Create 11 ticks (0-10) across 270 degree range
+            for (let i = 0; i <= 10; i++) {
+                const angle = -135 + (i / 10) * 270; // 270 degree range from -135 to 135
+                const rad = (angle * Math.PI) / 180;
+                
+                // Calculate tick position
+                const tickX = centerX + Math.sin(rad) * radius;
+                const tickY = centerY - Math.cos(rad) * radius;
+                
+                const tick = document.createElement('div');
+                tick.className = i % 5 === 0 ? 'knob-tick major' : 'knob-tick';
+                tick.style.position = 'absolute';
+                tick.style.left = `${tickX}px`;
+                tick.style.top = `${tickY}px`;
+                tick.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+                scaleElement.appendChild(tick);
+                
+                // Add number labels for major ticks
+                if (i % 5 === 0) {
+                    const labelRadius = radius + 12;
+                    const labelX = centerX + Math.sin(rad) * labelRadius;
+                    const labelY = centerY - Math.cos(rad) * labelRadius;
+                    
+                    const label = document.createElement('div');
+                    label.className = 'knob-label-number';
+                    label.textContent = i;
+                    label.style.position = 'absolute';
+                    label.style.left = `${labelX}px`;
+                    label.style.top = `${labelY}px`;
+                    label.style.transform = 'translate(-50%, -50%)';
+                    scaleElement.appendChild(label);
+                }
+            }
+        }
+        
+        // Setup knob with proper state tracking and 0-10 limits
+        function setupKnob(knobId, scaleElement, valueDisplay, onValueChange, initialValue = 5.0, rotationRange = 270) {
+            const knob = document.getElementById(knobId);
+            const stateKey = knobId.replace('Knob', '').toLowerCase();
+            const state = knobState[stateKey];
+            
+            // Initialize state
+            state.value = initialValue;
+            // Map 0-10 to rotation range (-135 to -135+rotationRange)
+            state.currentRotation = -135 + (initialValue / 10) * rotationRange;
+            knob.style.transform = `rotate(${state.currentRotation}deg)`;
+            valueDisplay.textContent = initialValue.toFixed(1);
+            
+            // Create scale - determine size based on knob
+            let knobSize = 80; // Default for tune/volume
+            if (knobId.includes('bass') || knobId.includes('treble') || knobId.includes('balance')) {
+                knobSize = 64;
+            }
+            createKnobScale(scaleElement, knobSize);
+            
+            let isDragging = false;
+            let startY = 0;
+            let startRotation = state.currentRotation;
+            
+            knob.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startRotation = state.currentRotation; // Use current rotation, not initial!
+                knob.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaY = startY - e.clientY;
+                const sensitivity = rotationRange / 200; // Adjust sensitivity
+                let newRotation = startRotation + deltaY * sensitivity;
+                
+                // Clamp rotation to limits
+                const minRotation = -135;
+                const maxRotation = -135 + rotationRange;
+                newRotation = Math.max(minRotation, Math.min(maxRotation, newRotation));
+                
+                // Calculate value (0-10)
+                const normalizedRotation = (newRotation - minRotation) / rotationRange;
+                const value = normalizedRotation * 10;
+                
+                // Update state
+                state.currentRotation = newRotation;
+                state.value = value;
+                
+                // Update visual
+                knob.style.transform = `rotate(${newRotation}deg)`;
+                valueDisplay.textContent = value.toFixed(1);
+                
+                // Call callback
+                onValueChange(value);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    knob.style.cursor = 'grab';
+                }
+            });
+            
+            // Touch support
+            knob.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                startRotation = state.currentRotation;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const deltaY = startY - e.touches[0].clientY;
+                const sensitivity = rotationRange / 200;
+                let newRotation = startRotation + deltaY * sensitivity;
+                
+                const minRotation = -135;
+                const maxRotation = -135 + rotationRange;
+                newRotation = Math.max(minRotation, Math.min(maxRotation, newRotation));
+                
+                const normalizedRotation = (newRotation - minRotation) / rotationRange;
+                const value = normalizedRotation * 10;
+                
+                state.currentRotation = newRotation;
+                state.value = value;
+                
+                knob.style.transform = `rotate(${newRotation}deg)`;
+                valueDisplay.textContent = value.toFixed(1);
+                
+                onValueChange(value);
+            });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+        
+        // Update tune (special case - maps to frequency)
+        function updateTune(value) {
+            // Map 0-10 to frequency range 88.0-108.0
+            const frequency = 88.0 + (value / 10) * 20.0;
+            updateFrequency(frequency);
+        }
+        
+        // Update volume (maps 0-10 to 0.0-1.0)
+        function updateVolume(value) {
+            volume = value / 10;
+            updateAudioParams();
+        }
+        
+        // Update bass (maps 0-10 to 0.0-1.0, then to -10dB to +10dB)
+        function updateBass(value) {
+            bass = value / 10;
+            updateAudioParams();
+        }
+        
+        // Update treble (maps 0-10 to 0.0-1.0, then to -10dB to +10dB)
+        function updateTreble(value) {
+            treble = value / 10;
+            updateAudioParams();
+        }
+        
+        // Update balance (maps 0-10 to 0.0-1.0, where 5.0 = center)
+        function updateBalance(value) {
+            balance = value / 10;
+            updateAudioParams();
+        }
+        
+        // Initialize audio context
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                sourceNode = audioContext.createMediaElementSource(audioPlayer);
+                
+                gainNode = audioContext.createGain();
+                
+                bassFilter = audioContext.createBiquadFilter();
+                bassFilter.type = 'lowshelf';
+                bassFilter.frequency.value = 250;
+                
+                trebleFilter = audioContext.createBiquadFilter();
+                trebleFilter.type = 'highshelf';
+                trebleFilter.frequency.value = 3000;
+                
+                // Balance control
+                splitterNode = audioContext.createChannelSplitter(2);
+                leftGain = audioContext.createGain();
+                rightGain = audioContext.createGain();
+                mergerNode = audioContext.createChannelMerger(2);
+                
+                sourceNode.connect(bassFilter);
+                bassFilter.connect(trebleFilter);
+                trebleFilter.connect(splitterNode);
+                splitterNode.connect(leftGain, 0);
+                splitterNode.connect(rightGain, 1);
+                leftGain.connect(mergerNode, 0, 0);
+                rightGain.connect(mergerNode, 0, 1);
+                mergerNode.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                updateAudioParams();
+            }
+        }
+        
+        // Update audio parameters
+        function updateAudioParams() {
+            if (gainNode) {
+                gainNode.gain.value = volume;
+            }
+            if (bassFilter) {
+                bassFilter.gain.value = (bass - 0.5) * 20;
+            }
+            if (trebleFilter) {
+                trebleFilter.gain.value = (treble - 0.5) * 20;
+            }
+            if (leftGain && rightGain) {
+                // Balance: 0 = left, 0.5 = center, 1 = right
+                const leftVol = balance < 0.5 ? 1 : 1 - (balance - 0.5) * 2;
+                const rightVol = balance > 0.5 ? 1 : 1 - (0.5 - balance) * 2;
+                leftGain.gain.value = leftVol;
+                rightGain.gain.value = rightVol;
+            }
+        }
+        
+        // Get scale and value display elements
+        const tuneKnobScale = document.getElementById('tuneKnobScale');
+        const tuneKnobValue = document.getElementById('tuneKnobValue');
+        const volumeKnobScale = document.getElementById('volumeKnobScale');
+        const volumeKnobValue = document.getElementById('volumeKnobValue');
+        const bassKnobScale = document.getElementById('bassKnobScale');
+        const bassKnobValue = document.getElementById('bassKnobValue');
+        const trebleKnobScale = document.getElementById('trebleKnobScale');
+        const trebleKnobValue = document.getElementById('trebleKnobValue');
+        const balanceKnobScale = document.getElementById('balanceKnobScale');
+        const balanceKnobValue = document.getElementById('balanceKnobValue');
+        
+        // Initialize knobs with 0-10 scale
+        // Tune knob: map 88.5 MHz to value (88.5-88.0)/20.0*10 = 0.25
+        const initialTuneValue = ((currentFrequency - 88.0) / 20.0) * 10;
+        setupKnob('tuneKnob', tuneKnobScale, tuneKnobValue, updateTune, initialTuneValue, 270);
+        setupKnob('volumeKnob', volumeKnobScale, volumeKnobValue, updateVolume, 5.0, 270);
+        setupKnob('bassKnob', bassKnobScale, bassKnobValue, updateBass, 5.0, 270);
+        setupKnob('trebleKnob', trebleKnobScale, trebleKnobValue, updateTreble, 5.0, 270);
+        setupKnob('balanceKnob', balanceKnobScale, balanceKnobValue, updateBalance, 5.0, 270);
+        
+        // Set initial frequency
+        updateFrequency(88.5);
+        
+        // Radio controls
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                playBtn.classList.add('active');
+            }
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            if (audioPlayer) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+            }
+            isPlaying = false;
+            playBtn.classList.remove('active');
+        });
+        
+        // Handle file selection
+        function handleFiles(fileList) {
+            const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.webm'];
+            
+            Array.from(fileList).forEach(file => {
+                const fileName = file.name.toLowerCase();
+                const isAudio = file.type.startsWith('audio/') || 
+                               audioExtensions.some(ext => fileName.endsWith(ext));
+                
+                if (isAudio) {
+                    const track = {
+                        id: Date.now() + Math.random(),
+                        name: file.name.replace(/\.[^/.]+$/, ""),
+                        file: file,
+                        url: URL.createObjectURL(file)
+                    };
+                    tracks.push(track);
+                }
+            });
+            
+            updateTrackList();
+            if (tracks.length > 0 && currentTrackIndex === -1) {
+                currentTrackIndex = 0;
+            }
+        }
+        
+        // Update track list
+        function updateTrackList() {
+            if (tracks.length === 0) {
+                trackSelector.innerHTML = '<div class="text-amber-600 text-center italic text-sm">No tracks loaded. Upload music files to get started.</div>';
+                return;
+            }
+            
+            trackSelector.innerHTML = tracks.map((track, index) => `
+                <div class="bg-amber-900 bg-opacity-30 border border-amber-800 rounded p-3 mb-2 cursor-pointer hover:bg-amber-800 hover:bg-opacity-40 transition ${index === currentTrackIndex && isPlaying ? 'border-amber-600 bg-amber-800 bg-opacity-50' : ''}" 
+                     onclick="selectTrack(${index})">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="text-amber-500 font-mono text-sm font-bold">${String(index + 1).padStart(2, '0')}</div>
+                            <div class="text-amber-200 text-sm truncate" title="${track.name}">${track.name}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="vintage-button px-2 py-1 rounded text-xs text-amber-100" onclick="event.stopPropagation(); selectTrack(${index}); playJukeboxTrack();">▶</button>
+                            <button class="vintage-button px-2 py-1 rounded text-xs text-amber-100" onclick="event.stopPropagation(); removeTrack(${index});">✕</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Select track
+        function selectTrack(index) {
+            if (index >= 0 && index < tracks.length) {
+                currentTrackIndex = index;
+                updateTrackList();
+                updateTrackDisplay();
+            }
+        }
+        
+        // Update track display
+        function updateTrackDisplay() {
+            if (currentTrackIndex >= 0 && currentTrackIndex < tracks.length) {
+                const track = tracks[currentTrackIndex];
+                trackNumber.textContent = String(currentTrackIndex + 1).padStart(2, '0');
+                trackName.textContent = track.name.toUpperCase();
+            } else {
+                trackNumber.textContent = '--';
+                trackName.textContent = 'NO TRACK SELECTED';
+            }
+        }
+        
+        // Play jukebox track
+        function playJukeboxTrack() {
+            if (currentTrackIndex < 0 || currentTrackIndex >= tracks.length) {
+                if (tracks.length > 0) {
+                    currentTrackIndex = 0;
+                } else {
+                    alert('No tracks loaded. Please upload music files first.');
+                    return;
+                }
+            }
+            
+            initAudioContext();
+            
+            const track = tracks[currentTrackIndex];
+            audioPlayer.src = track.url;
+            audioPlayer.volume = 1;
+            
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                recordDisplay.classList.add('playing');
+                jukeboxPlayBtn.classList.add('active');
+                jukeboxPauseBtn.classList.remove('active');
+                updateTrackList();
+            }).catch(e => {
+                console.error('Playback failed:', e);
+                alert('Failed to play track. Please check if the file is a valid audio file.');
+            });
+        }
+        
+        // Pause jukebox track
+        function pauseJukeboxTrack() {
+            audioPlayer.pause();
+            isPlaying = false;
+            recordDisplay.classList.remove('playing');
+            jukeboxPlayBtn.classList.remove('active');
+            jukeboxPauseBtn.classList.add('active');
+        }
+        
+        // Stop jukebox track
+        function stopJukeboxTrack() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            isPlaying = false;
+            recordDisplay.classList.remove('playing');
+            jukeboxPlayBtn.classList.remove('active');
+            jukeboxPauseBtn.classList.remove('active');
+        }
+        
+        // Previous track
+        function prevTrack() {
+            if (tracks.length === 0) return;
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            updateTrackDisplay();
+            updateTrackList();
+            if (isPlaying) {
+                playJukeboxTrack();
+            }
+        }
+        
+        // Next track
+        function nextTrack() {
+            if (tracks.length === 0) return;
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            updateTrackDisplay();
+            updateTrackList();
+            if (isPlaying) {
+                playJukeboxTrack();
+            }
+        }
+        
+        // Remove track
+        function removeTrack(index) {
+            if (index >= 0 && index < tracks.length) {
+                const track = tracks[index];
+                URL.revokeObjectURL(track.url);
+                tracks.splice(index, 1);
+                
+                if (currentTrackIndex === index) {
+                    if (tracks.length > 0) {
+                        currentTrackIndex = Math.min(index, tracks.length - 1);
+                    } else {
+                        currentTrackIndex = -1;
+                        stopJukeboxTrack();
+                    }
+                } else if (currentTrackIndex > index) {
+                    currentTrackIndex--;
+                }
+                
+                updateTrackList();
+                updateTrackDisplay();
+            }
+        }
+        
+        // Event listeners
+        jukeboxPlayBtn.addEventListener('click', playJukeboxTrack);
+        jukeboxPauseBtn.addEventListener('click', pauseJukeboxTrack);
+        jukeboxStopBtn.addEventListener('click', stopJukeboxTrack);
+        prevBtn.addEventListener('click', prevTrack);
+        nextBtn.addEventListener('click', nextTrack);
+        
+        // Audio ended
+        audioPlayer.addEventListener('ended', () => {
+            nextTrack();
+            if (isPlaying) {
+                playJukeboxTrack();
+            }
+        });
+        
+        // File input
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        // Folder input
+        folderInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        // Make functions global
+        window.selectTrack = selectTrack;
+        window.removeTrack = removeTrack;
+        window.playJukeboxTrack = playJukeboxTrack;
+        
+        // Initialize
+        updateTrackDisplay();
+    </script>
+</body>
+</html>
